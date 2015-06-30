@@ -8,7 +8,7 @@ deploy:
   secret_access_key:
     secure: ESBWFTNZH+cNsaVj6SmVxgfJ7hwdjBum0Ru6PZ0TzXQIE14VbqInyWaMXTeuaiji9uyCgcqi4SvhyZD7dDIesjUtHjWueL8REmDhXTmokUFR33w4aCpQc1qQ8wSaZwyzirR3BUH8kAr/SGnQ4anzlbQZ38ZkIQ3qpXe8d3KUsshdaOqaolwZctUjv/uiqS/VFpMoxmh5wPBpS+VUMfZMZpslHo26jYAgckdsRRTTe1rj74QYGL4k4ak/keG1cpJ3vR9cYXYM3oqab+zhr5GYleuRFB5Kn04P3O0CCBqXgBBum6vZNiv/RoyywPQbU2enEagKX+AJ0Nm+qKkAbz8TCF+t3EB2NqcfPZS2++aHU1mqlaM9Fob9AItrZooqVEp6oTBFDYjgjUv9wPt687ixW9NRlwH8VtYHqQC/VL7qquX42SiCNKXA6ln/cCDn4arG0c5kmVashlG+c6i7gej8/ZfPBjrIwtJ1um6RPYZdLXPRWpsUoeeuHaOISNKPaHmNc7smhNbFj8Won3TUrIfsUsw5Di+Or5B3GFhGq3Xjc2dj5/IpU60gulPoIZ4Dne/4muasXbRP/cBy/BniGOZEs4/cw1qWm4qj6M5GERaPtNEcTmpVpu4ijoZKYRMyMwZYGqB3SDNR3UJcU+yAuo3DpJuVkE3thhpDpaR0t6czXwE=
   bucket: deploy-weeia
-  local-dir: daniel.mostowski/workerAPP
+  upload-dir: daniel.mostowski/workerAPP
   acl: public_read
   on:
     repo: MarCovy/AWS_ProjectSQSWorker
