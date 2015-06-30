@@ -1,16 +1,20 @@
 {
-  "name": "digestServer",
+  "name": "sqsWorker",
   "version": "0.0.0",
   "description": "AWS nodejs, połączona z travisem pobiera zlecenie z kolejki, przetwarza plik, aktualizuje dane w sampleDB, pobiera i wrzuca plik na S3",
   "main": "app.js",
   "scripts": {
     "test": "mocha"
   },
-  "author": "Pawel Czubak",
+  "author": "Daniel Mostowski",
   "license": "MIT",
   "dependencies": {
-    "async": "^0.7.0",
-    "aws-sdk": "^2.0.0-rc13"
+    "async": "^1.3.0",
+    "aws-sdk": "^2.1.36",
+    "chalk": "^1.0.0",
+    "fs": "0.0.2",
+    "imagemagick": "^0.1.3",
+    "q": "^2.0.3"
   },
   "directories": {
     "test": "test"
@@ -18,10 +22,10 @@
   "devDependencies": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/pawel33317/AWS-app-worker.git"
+    "url": "https://github.com/MarCovy/AWS_ProjectSQSWorker.git"
   },
   "bugs": {
-    "url": "https://github.com/pawel33317/AWS-app-worker/issues"
+    "url": "https://github.com/MarCovy/AWS_ProjectSQSWorker/issues"
   },
-  "homepage": "https://github.com/pawel33317/AWS-app-worker"
+  "homepage": "https://github.com/MarCovy/AWS_ProjectSQSWorker"
 }

@@ -8,7 +8,7 @@ aws.config.loadFromPath('./config.json');
 var Q = require( "q" );
 var chalk = require( "chalk" );
 var fs = require('fs');
-gm = require("gm").subClass({imageMagick: true});
+var im = require('imagemagick');
  
 // Create an instance of our SQS Client.
 var sqs = new aws.SQS({
@@ -84,48 +84,44 @@ var deleteMessage = Q.nbind( sqs.deleteMessage, sqs );
 			var requestt = s3.getObject(paramsToLoad).createReadStream().pipe(file);
 			requestt.on('finish', function (){
 				console.log(chalk.green("Plik został zapisany na dysku"));
-				gm('tmp/'+strParam[1])
-				  .rotate('red', -30)
-				  .write('tmp/'+strParam[1], function(err){
-					if (err) return console.dir(arguments)
-					console.log(this.outname + " created  ::  " + arguments[3])
-				  }
-				) 
-					
-					
-					
-						console.log(' udalosie przetworzuc plik');	
-						var fileStream = require('fs').createReadStream('tmp/'+strParam[1]);
-						fileStream.on('open', function () {
-							var paramsu = {
-								Bucket: paramsToLoad.Bucket,
-								Key: strParam[1],
-								ACL: 'public-read',
-								Body: fileStream,
-							};
-							s3.putObject(paramsu, function(err, datau) {
-								if (err) {
-									console.log(err, err.stack);
-								}
-								else {   
-									console.log(datau);
-									console.log('Upload udany');
-									var paramsdb = {
-										Attributes: [
-											{ 
-											Name: "key", 
-											Value: strParam, 
-											Replace: true
-											}
-										],
-										DomainName: "daniel.mostowski", 
-										ItemName: 'ITEM001'
-									};
-								}
-							});
+                im.resize({
+                  srcPath: 'tmp/'+strParam[1],
+                  dstPath: 'tmp/changed_'+strParam[1],
+                  width:   512
+                }, function(err, stdout, stderr){
+                  if (err) throw err;
+                  	console.log('Udalo sie przetworzyc plik');	
+					var fileStream = require('fs').createReadStream('tmp/'+strParam[1]);
+					fileStream.on('open', function () {
+						var paramsu = {
+							Bucket: paramsToLoad.Bucket,
+							Key: strParam[1],
+							ACL: 'public-read',
+							Body: fileStream,
+						};
+						s3.putObject(paramsu, function(err, datau) {
+							if (err) {
+								console.log(err, err.stack);
+							}
+							else {   
+								console.log(datau);
+								console.log('Upload udany');
+								var paramsdb = {
+									Attributes: [
+										{ 
+										Name: "key", 
+										Value: strParam, 
+										Replace: true
+										}
+									],
+									DomainName: "daniel.mostowski", 
+									ItemName: 'Sukces'
+								};
+							}
 						});
-					
-				
+					});
+                });
+			
 			});
             // Now that we've processed the message, we need to tell SQS to delete the
             // message. Right now, the message is still in the queue, but it is marked
