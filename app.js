@@ -8,7 +8,7 @@ aws.config.loadFromPath('./config.json');
 var Q = require( "q" );
 var chalk = require( "chalk" );
 var fs = require('fs');
-var im = require('imagemagick');
+var gm = require('gm');
  
 // Create an instance of our SQS Client.
 var sqs = new aws.SQS({
@@ -25,6 +25,7 @@ var sqs = new aws.SQS({
 });
 
 var s3 = new aws.S3();
+var simpledb = new aws.SimpleDB();
  
 // Proxy the appropriate SQS methods to ensure that they "unwrap" the common node.js
 // error / callback pattern and return Promises. Promises are good and make it easier to
@@ -74,23 +75,26 @@ var deleteMessage = Q.nbind( sqs.deleteMessage, sqs );
             // TODO: Actually process the message in some way :P
             // ---
             console.log( chalk.green( "Deleting:", data.Messages[ 0 ].MessageId ) );
-			console.log (chalk.green(data.Messages[ 0 ].Body))
-			strParam = data.Messages[ 0 ].Body.split("/")
+			console.log (chalk.green(data.Messages[ 0 ].Body));
+			var strParam = data.Messages[ 0 ].Body.split("/");
 			var paramsToLoad = {
-				Bucket: "lab4-weeia/"+strParam[0],
-				Key: strParam[1]
+				Bucket: "lab4-weeia/"+strParam[0]
 			};
 			var file = require('fs').createWriteStream('tmp/'+strParam[1]);
 			var requestt = s3.getObject(paramsToLoad).createReadStream().pipe(file);
 			requestt.on('finish', function (){
 				console.log(chalk.green("Plik został zapisany na dysku"));
-                im.resize({
-                  srcPath: 'tmp/'+strParam[1],
-                  dstPath: 'tmp/changed_'+strParam[1],
-                  width:   512
-                }, function(err, stdout, stderr){
-                  if (err) throw err;
-                  	console.log('Udalo sie przetworzyc plik');	
+                gm('tmp/'+strParam[1])
+				.implode(-1.2)
+				.contrast(-6)
+				//.resize(353, 257)
+				.autoOrient()
+				.write('tmp/changed'+strParam[1], function (err) {
+				if (err) {
+					console.log(err);
+				}
+				else {
+					console.log(' udalosie przetworzuc plik');	
 					var fileStream = require('fs').createReadStream('tmp/'+strParam[1]);
 					fileStream.on('open', function () {
 						var paramsu = {
@@ -117,11 +121,20 @@ var deleteMessage = Q.nbind( sqs.deleteMessage, sqs );
 									DomainName: "daniel.mostowski", 
 									ItemName: 'Sukces'
 								};
+								simpledb.putAttributes(paramsdb, function(err, datass) {
+    							if (err) {
+    								console.log('Blad zapisu do bazy'+err, err.stack);
+    							}
+    							else {
+    								console.log("Zapisano do bazy");
+    								//usuwanie wiadomosci z kolejki
+    							}
+    							});
 							}
 						});
 					});
-                });
-			
+				}
+				});	
 			});
             // Now that we've processed the message, we need to tell SQS to delete the
             // message. Right now, the message is still in the queue, but it is marked
@@ -129,10 +142,9 @@ var deleteMessage = Q.nbind( sqs.deleteMessage, sqs );
             // "re-queue" the message when the "VisibilityTimeout" expires such that it
             // can be handled by another receiver.
             return(
-				//console.log (chalk.green(data.Messages[ 0 ].Body))
                 deleteMessage({
                     ReceiptHandle: data.Messages[ 0 ].ReceiptHandle
-                })
+                }) 
             );
  
         }
