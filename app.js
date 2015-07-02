@@ -5,7 +5,7 @@ var config = require( "./config.json" );
 // Require libraries.
 var aws = require( "aws-sdk" );
 aws.config.loadFromPath('./config.json');
-var Q = require( "q" );
+var Q = require( 'q' );
 var chalk = require( "chalk" );
 var fs = require('fs');
 var gm = require('gm');
@@ -78,63 +78,64 @@ var deleteMessage = Q.nbind( sqs.deleteMessage, sqs );
 			console.log (chalk.green(data.Messages[ 0 ].Body));
 			var strParam = data.Messages[ 0 ].Body.split("/");
 			var paramsToLoad = {
-				Bucket: "lab4-weeia/"+strParam[0]
+				Bucket: "lab4-weeia/"+strParam[0],
+				Key: strParam[1]
 			};
 			var file = require('fs').createWriteStream('tmp/'+strParam[1]);
-			var requestt = s3.getObject(paramsToLoad).createReadStream().pipe(file);
-			requestt.on('finish', function (){
+			var request = s3.getObject(paramsToLoad).createReadStream().pipe(file);
+			request.on('finish', function (){
 				console.log(chalk.green("Plik został zapisany na dysku"));
-                gm('tmp/'+strParam[1])
+				gm('tmp/'+strParam[1])
 				.implode(-1.2)
 				.contrast(-6)
 				//.resize(353, 257)
 				.autoOrient()
-				.write('tmp/changed'+strParam[1], function (err) {
+				.write('tmp/changed_'+strParam[1], function (err) {
 				if (err) {
 					console.log(err);
-				}
-				else {
-					console.log(' udalosie przetworzuc plik');	
-					var fileStream = require('fs').createReadStream('tmp/'+strParam[1]);
+				}else{
+				    console.log(chalk.green('Plik zostal przetworzony'));
+					//wrzucamy na s3 nowy plik
+					var fileStream = require('fs').createReadStream('tmp/changed_'+strParam[1]);
 					fileStream.on('open', function () {
 						var paramsu = {
 							Bucket: paramsToLoad.Bucket,
-							Key: strParam[1],
+							Key: 'changed_'+strParam[1],
 							ACL: 'public-read',
 							Body: fileStream,
 						};
 						s3.putObject(paramsu, function(err, datau) {
-							if (err) {
-								console.log(err, err.stack);
-							}
-							else {   
-								console.log(datau);
-								console.log('Upload udany');
-								var paramsdb = {
-									Attributes: [
-										{ 
-										Name: "key", 
-										Value: strParam, 
-										Replace: true
-										}
-									],
-									DomainName: "daniel.mostowski", 
-									ItemName: 'Sukces'
-								};
-								simpledb.putAttributes(paramsdb, function(err, datass) {
+    						if (err) {
+    							console.log(err, err.stack);
+    						}
+    						else {   
+    							console.log(chalk.green(datau));
+    							console.log(chalk.green('Upload zakonczony'));
+    							var paramsdb = {
+								Attributes: [
+									{ 
+                					Name:"key",
+                					Value: 'changed_'+strParam[1],
+                					Replace: false
+									}
+								],
+								DomainName: "daniel.mostowski", 
+								ItemName: 'Zakonczone'
+    							};
+    							simpledb.putAttributes(paramsdb, function(err, datass) {
     							if (err) {
     								console.log('Blad zapisu do bazy'+err, err.stack);
     							}
     							else {
-    								console.log("Zapisano do bazy");
-    								//usuwanie wiadomosci z kolejki
+    								console.log(chalk.green("Zapisano do bazy"));
     							}
     							});
-							}
+    						}
 						});
 					});
 				}
-				});	
+				});
+
 			});
             // Now that we've processed the message, we need to tell SQS to delete the
             // message. Right now, the message is still in the queue, but it is marked
